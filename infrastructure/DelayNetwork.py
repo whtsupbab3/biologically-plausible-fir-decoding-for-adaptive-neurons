@@ -20,7 +20,7 @@ class DelayNetwork(nengo.Network):
         decoder_weights: Union[np.ndarray, list[float]] = [],
         delay_mode: Literal["zero", "range", "discrete"] = "range",
         delay_range: Optional[tuple[float, float]] = (0.002, 0.025),
-        discrete_delays_set: Optional[list[float]] = [0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008,  0.009, 0.010, 0.011, 0.012, 0.013, 0.014, 0.015, 0.016, 0.017, 0.018, 0.019, 0.020, 0.021, 0.022, 0.023, 0.024, 0.025]
+        discrete_delays_set: Optional[list[float]] = [0.002, 0.004, 0.006, 0.008, 0.010, 0.012, 0.014, 0.016, 0.018, 0.020, 0.022, 0.025]
     ):
         super().__init__(label=label, seed=seed)
         self.dt             = dt
