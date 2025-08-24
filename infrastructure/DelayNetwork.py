@@ -19,8 +19,8 @@ class DelayNetwork(nengo.Network):
         dimensions: int = 1,
         decoder_weights: Union[np.ndarray, list[float]] = [],
         delay_mode: Literal["zero", "range", "discrete"] = "range",
-        delay_range: Optional[tuple[float, float]] = (0.002, 0.03),
-        discrete_delays_set: Optional[list[float]] = [0.002, 0.003, 0.004, 0.008, 0.009, 0.01, 0.012, 0.015, 0.017, 0.019, 0.021, 0.025]
+        delay_range: Optional[tuple[float, float]] = (0.002, 0.025),
+        discrete_delays_set: Optional[list[float]] = [0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008,  0.009, 0.010, 0.011, 0.012, 0.013, 0.014, 0.015, 0.016, 0.017, 0.018, 0.019, 0.020, 0.021, 0.022, 0.023, 0.024, 0.025]
     ):
         super().__init__(label=label, seed=seed)
         self.dt             = dt
@@ -61,13 +61,23 @@ class DelayNetwork(nengo.Network):
             nengo.Connection(self.ens, self.nengo_readout, synapse=self.readout_synapse)
 
     def _build_delay_node(self):
-        if self.delay_mode is "zero":
-            delays = np.zeros(self.num_neurons, dtype=int) 
-        elif self.delay_mode is "range":
-            delays = np.random.uniform(low=self.delay_range[0], high=self.delay_range[1], size=self.num_neurons)
+        rng = np.random.default_rng(self.randomness_seed)
+        
+        if self.delay_mode == "zero":
+            delay_steps = np.zeros(self.num_neurons, dtype=int)
+        elif self.delay_mode == "range":
+            lo, hi = 0.002, 0.025
+            delay_steps = np.rint(
+                rng.uniform(lo, hi, size=self.num_neurons) / self.dt
+            ).astype(int)
+        elif self.delay_mode == "discrete":
+            chosen = rng.choice(self.discrete_delays_set, size=self.num_neurons, replace=True)
+            delay_steps = np.rint(np.array(chosen) / self.dt).astype(int)
         else:
-            delays = random.choices(self.discrete_delays_set, k=self.num_neurons)
-       
+            raise ValueError(f"Unknown delay_mode {self.delay_mode}")
+
+        delays = delay_steps * self.dt
+
         return nengo.Node(
                 PerNeuronDelayNode(self.num_neurons, delays, self.dt), 
                 size_in=self.num_neurons,
