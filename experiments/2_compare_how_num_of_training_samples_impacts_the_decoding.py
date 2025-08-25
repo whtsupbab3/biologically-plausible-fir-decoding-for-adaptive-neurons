@@ -21,11 +21,11 @@ readout_synapse = 0.05
 neuron_type = nengo.AdaptiveLIF(tau_n=0.5, inc_n=0.01)
 run_time = 10.0
 dt = 0.001
-default_delay_mode = "discrete"
+default_delay_mode = "zero"
 input_high = 10
 n_experiments = 1
-training_sample_counts = [1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-base_train_seed = 1000
+slice_counts = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
+base_train_seed = 3244
 base_test_seed = 2000
 
 result_dir = os.path.abspath(os.path.join(current_dir, "..", "figures"))
@@ -34,7 +34,7 @@ os.makedirs(result_dir, exist_ok=True)
 def run_single_training_run(train_seed):
 	with nengo.Network(seed=10) as model:
 		input_node = nengo.Node(nengo.processes.WhiteSignal(period=run_time, high=input_high, rms=0.25, seed=train_seed), size_out=1)
-		delay_network = DelayNetwork(num_neurons=n_neurons, readout_synapse=readout_synapse, neuron_type=neuron_type, delay_mode="discrete")
+		delay_network = DelayNetwork(num_neurons=n_neurons, readout_synapse=readout_synapse, neuron_type=neuron_type, delay_mode=default_delay_mode)
 		nengo.Connection(input_node, delay_network.ens, synapse=None)
 
 		p_input = nengo.Probe(input_node, sample_every=dt)
@@ -47,11 +47,9 @@ def run_single_training_run(train_seed):
 
 def train_decoder_from_stacked_runs(activity_list, input_list):
 	X = np.vstack(activity_list)
-	y = np.concatenate(input_list)
+	y = np.vstack(input_list)
 	coeffs = calculate_coeffs(X, y)
-
-	coeffs = np.asarray(coeffs)
-	return coeffs
+	return np.asarray(coeffs)
 
 def evaluate_decoder_on_test(coeffs, test_seed):
 	with nengo.Network(seed=10) as model:
@@ -69,59 +67,51 @@ def evaluate_decoder_on_test(coeffs, test_seed):
 	loss = calculate_loss_function(sim.data[p_input], decoded)
 	return loss
 
-
 def run_sweep():
-	results = {N: [] for N in training_sample_counts}
+	results = {N: [] for N in slice_counts}
 
-	print(f"Running sweep over training sample counts: {training_sample_counts}")
-	print(f"Repeating each setting {n_experiments} times to collect statistics")
+	print(f"Evaluating decoder sizes: {slice_counts}")
 
 	for exp_idx in range(n_experiments):
 		print(f"Experiment repeat {exp_idx+1}/{n_experiments}")
 		test_seed = base_test_seed + exp_idx
 
-		for N in training_sample_counts:
-			activity_list = []
-			input_list = []
+		records = []
+		for j in range(slice_counts[-1]):
+			train_seed = base_train_seed + exp_idx * 100 + j
+			activity, inputs, _t = run_single_training_run(train_seed)
+			records.append({"activity": activity, "input": inputs})
 
-			for j in range(N):
-				train_seed = base_train_seed + exp_idx * 100 + j
-				activity, inputs, _t = run_single_training_run(train_seed)
-				activity_list.append(activity)
-				input_list.append(inputs)
+		for N in slice_counts:
+			activity_list = [rec['activity'] for rec in records[:N]]
+			input_list = [rec['input'] for rec in records[:N]]
 
 			coeffs = train_decoder_from_stacked_runs(activity_list, input_list)
 			loss = evaluate_decoder_on_test(coeffs, test_seed)
 			results[N].append(loss)
-			print(f"  N={N:2d} -> loss={loss:.6e}")
-
+			
+	Ns = []
 	means = []
 	stds = []
-	Ns = []
 	out_lines = ["N,loss_mean,loss_std,all_losses"]
-	for N in training_sample_counts:
+	for N in slice_counts:
 		arr = np.array(results[N])
+		Ns.append(N)
 		means.append(arr.mean())
 		stds.append(arr.std())
-		Ns.append(N)
 		out_lines.append(f"{N},{arr.mean():.6e},{arr.std():.6e},\"{arr.tolist()}\"")
-
-	timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-	csv_path = os.path.join(result_dir, f"training_samples_sweep_{timestamp}.csv")
-	with open(csv_path, 'w') as f:
-		f.write('\n'.join(out_lines))
-
+		
 	plt.figure(figsize=(10, 5))
-	plt.errorbar(Ns, means, yerr=stds, marker='o', capsize=4)
+	plt.plot(Ns, means, marker='o')
+	plt.fill_between(Ns, np.array(means) - np.array(stds), np.array(means) + np.array(stds), alpha=0.2)
 	plt.xlabel('Number of independent training samples (N)')
 	plt.ylabel('Test MSE loss')
 	plt.title('Effect of number of training samples on decoding accuracy')
 	plt.grid(True)
-	plot_path = os.path.join(result_dir, f"training_samples_sweep_{timestamp}.png")
+	plot_path_pdf = os.path.join(result_dir, f"training_samples_sweep.pdf")
 	try:
-		plt.savefig(plot_path, bbox_inches='tight', dpi=300)
-		print(f"Saved plot to {plot_path}")
-		print(f"Saved CSV results to {csv_path}")
+		plt.savefig(plot_path_pdf, bbox_inches='tight', dpi=300)
+		print(f"Saved plot to {plot_path_pdf}.")
 	except Exception as e:
 		print(f"Failed to save outputs: {e}")
 

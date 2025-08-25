@@ -68,7 +68,7 @@ def train_and_evaluate_decoders(train_input, test_input, delay_mode):
         plt.ylabel("Signal value")
         plt.title(plot_title)
         plt.legend()
-        filename = f"{delay_mode}_delay_decoding_syn={readout_synapse}_mf.png"
+        filename = f"{delay_mode}_delay_decoding_syn={readout_synapse}_mf.pdf"
         save_path = os.path.join(os.path.join(current_dir, "../figures"), filename)
         try:
             plt.savefig(save_path, bbox_inches='tight', dpi=300)
@@ -123,7 +123,7 @@ def run_experiments():
         plt.legend()
         plt.grid(True)
 
-        filename = f"loss_comparison_syn={readout_synapse}_mf.png"
+        filename = f"loss_comparison_syn={readout_synapse}_mf.pdf"
         save_path = os.path.join(os.path.join(current_dir, "../figures"), filename)
         try:
             plt.savefig(save_path, bbox_inches='tight', dpi=300)
