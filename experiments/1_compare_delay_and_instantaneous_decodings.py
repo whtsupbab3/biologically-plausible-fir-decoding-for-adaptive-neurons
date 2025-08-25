@@ -19,6 +19,7 @@ neuron_type = nengo.AdaptiveLIF(tau_n=0.5, inc_n=0.01)
 run_time = 10.0
 dt = 0.001
 default_delay_mode = "discrete"
+input_high = 5
 
 np.random.seed(42)
 
@@ -60,14 +61,14 @@ def train_and_evaluate_decoders(train_input, test_input, delay_mode):
 
     try:
         plt.figure(figsize=(12, 4))
-        plt.plot(t, sim.data[p_input], label="Input signal", linewidth=1, linestyle='--')
-        plt.plot(t, decoded, label="Delay decoding", linewidth=1, alpha=0.6)
+        plt.plot(t, sim.data[p_input], linewidth=1, linestyle='--')
+        plt.plot(t, decoded, linewidth=1, alpha=0.6)
 
         plt.xlabel("Time (s)")
         plt.ylabel("Signal value")
         plt.title(plot_title)
         plt.legend()
-        filename = f"{delay_mode}_delay_decoding_syn={readout_synapse}.png"
+        filename = f"{delay_mode}_delay_decoding_syn={readout_synapse}_mf.png"
         save_path = os.path.join(os.path.join(current_dir, "../figures"), filename)
         try:
             plt.savefig(save_path, bbox_inches='tight', dpi=300)
@@ -87,16 +88,56 @@ def train_and_evaluate_decoders(train_input, test_input, delay_mode):
     }
 
 def run_experiments():
-
+    global run_time
     run_time = 5.0
 
-    train_white_signal = nengo.processes.WhiteSignal(period=run_time, high=10, rms=0.25, seed=121)
-    test_white_signal = nengo.processes.WhiteSignal(period=run_time, high=10, rms=0.25, seed=223)
+    n_experiments = 10
+    base_train_seed = 121
+    base_test_seed = 223
+    modes = ["range", "discrete", "zero"]
 
-    print("Running delay decoder experiment...")
-    train_and_evaluate_decoders(train_input=train_white_signal, test_input=test_white_signal, delay_mode="range")
-    train_and_evaluate_decoders(train_input=train_white_signal, test_input=test_white_signal, delay_mode="discrete")
-    train_and_evaluate_decoders(train_input=train_white_signal, test_input=test_white_signal, delay_mode="zero")
+    losses = {m: [] for m in modes}
+
+    print(f"Running {n_experiments} experiments for modes: {modes} (run_time={run_time}s)")
+    for i in range(n_experiments):
+        train_seed = base_train_seed + i
+        test_seed = base_test_seed + i
+
+        train_white_signal = nengo.processes.WhiteSignal(period=run_time, high=input_high, rms=0.25, seed=train_seed)
+        test_white_signal = nengo.processes.WhiteSignal(period=run_time, high=input_high, rms=0.25, seed=test_seed)
+
+        print(f"Experiment {i+1}/{n_experiments} - train_seed={train_seed}, test_seed={test_seed}")
+        for mode in modes:
+            res = train_and_evaluate_decoders(train_input=train_white_signal, test_input=test_white_signal, delay_mode=mode)
+            losses[mode].append(res["loss"])
+
+    try:
+        x = np.arange(1, n_experiments + 1)
+        plt.figure(figsize=(10, 5))
+        for mode in modes:
+            plt.plot(x, losses[mode], marker='o', label=f"{mode} (mean={np.mean(losses[mode]):.4e})")
+
+        plt.xlabel("Experiment #")
+        plt.ylabel("Loss")
+        plt.title("Decoding loss across experiments (high=5.0)")
+        plt.legend()
+        plt.grid(True)
+
+        filename = f"loss_comparison_syn={readout_synapse}_mf.png"
+        save_path = os.path.join(os.path.join(current_dir, "../figures"), filename)
+        try:
+            plt.savefig(save_path, bbox_inches='tight', dpi=300)
+            print(f"Saved loss comparison plot to {save_path}")
+        except Exception as e:
+            print(f"Failed to save loss comparison plot: {e}")
+
+    except Exception as e:
+        print(f"Failed to generate loss comparison plot: {e}")
+
+    for mode in modes:
+        vals = np.array(losses[mode])
+        print(f"{mode} losses: {vals}")
+        print(f"{mode} mean loss: {np.mean(vals):.6e}, std: {np.std(vals):.6e}")
 
 if __name__ == "__main__":
     run_experiments()
