@@ -9,7 +9,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, ".."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-from infrastructure.utils import calculate_coeffs, calculate_loss_function, plot_decoding
+from infrastructure.utils import calculate_coeffs, calculate_loss_function, add_noise_to_activity
 from infrastructure.DelayNetwork import DelayNetwork
 
 # Constants
@@ -19,7 +19,7 @@ neuron_type = nengo.AdaptiveLIF(tau_n=0.5, inc_n=0.01)
 run_time = 10.0
 dt = 0.001
 default_delay_mode = "discrete"
-input_high = 5
+input_high = 0.5
 
 np.random.seed(42)
 
@@ -36,7 +36,11 @@ def train_and_evaluate_decoders(train_input, test_input, delay_mode):
         sim.run(run_time)
 
     t = sim.trange()
-    coeffs = calculate_coeffs(sim.data[p_delay_activity], sim.data[p_input])
+    if delay_mode is "zero":
+        activity = sim.data[p_delay_activity]
+    else: 
+        activity = add_noise_to_activity(sim.data[p_delay_activity])
+    coeffs = calculate_coeffs(activity, sim.data[p_input])
 
     with nengo.Network(seed=10) as model:
         input_node = nengo.Node(test_input, size_out=1)
@@ -68,7 +72,7 @@ def train_and_evaluate_decoders(train_input, test_input, delay_mode):
         plt.ylabel("Signal value")
         plt.title(plot_title)
         plt.legend()
-        filename = f"{delay_mode}_delay_decoding_syn={readout_synapse}_mf.pdf"
+        filename = f"{delay_mode}_delay_decoding_syn={readout_synapse}_lf.pdf"
         save_path = os.path.join(os.path.join(current_dir, "../figures"), filename)
         try:
             plt.savefig(save_path, bbox_inches='tight', dpi=300)
@@ -119,11 +123,11 @@ def run_experiments():
 
         plt.xlabel("Experiment #")
         plt.ylabel("Loss")
-        plt.title("Decoding loss across experiments (high=5.0)")
+        plt.title("Decoding loss across experiments (high=0.5)")
         plt.legend()
         plt.grid(True)
 
-        filename = f"loss_comparison_syn={readout_synapse}_mf.pdf"
+        filename = f"loss_comparison_syn={readout_synapse}_lf.pdf"
         save_path = os.path.join(os.path.join(current_dir, "../figures"), filename)
         try:
             plt.savefig(save_path, bbox_inches='tight', dpi=300)

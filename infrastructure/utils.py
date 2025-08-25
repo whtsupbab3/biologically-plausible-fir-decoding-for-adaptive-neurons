@@ -20,3 +20,9 @@ def plot_decoding(t, true_signal, decoded_signal, nengo_decoded, title="Delay de
 def calculate_coeffs(activity, input_values): 
     coeffs, *_ = np.linalg.lstsq(activity, input_values, rcond=None)
     return coeffs
+
+def add_noise_to_activity(activity, noise_level = 0.05):
+    noise_level = 0.05
+    rng = np.random.RandomState(42)
+    noise_std_activity = noise_level * np.max(np.abs(activity))
+    return activity + rng.normal(0.0, noise_std_activity, size=activity.shape)
