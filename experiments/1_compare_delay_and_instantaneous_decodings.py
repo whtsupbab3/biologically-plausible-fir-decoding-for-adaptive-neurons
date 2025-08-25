@@ -4,7 +4,6 @@ import nengo
 import sys
 import os
 import matplotlib.pyplot as plt
-from datetime import datetime
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, ".."))
 if project_root not in sys.path:
@@ -36,7 +35,7 @@ def train_and_evaluate_decoders(train_input, test_input, delay_mode):
         sim.run(run_time)
 
     t = sim.trange()
-    if delay_mode is "zero":
+    if delay_mode == "zero":
         activity = sim.data[p_delay_activity]
     else: 
         activity = add_noise_to_activity(sim.data[p_delay_activity])
