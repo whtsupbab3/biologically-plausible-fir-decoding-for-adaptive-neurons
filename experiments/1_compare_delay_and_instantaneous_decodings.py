@@ -18,7 +18,7 @@ neuron_type = nengo.AdaptiveLIF(tau_n=0.5, inc_n=0.01)
 run_time = 10.0
 dt = 0.001
 default_delay_mode = "discrete"
-input_high = 0.5
+input_high = 10
 
 np.random.seed(42)
 
@@ -122,7 +122,7 @@ def run_experiments():
 
         plt.xlabel("Experiment #")
         plt.ylabel("Loss")
-        plt.title("Decoding loss across experiments (high=0.5)")
+        plt.title("Decoding loss across experiments (high=10)")
         plt.legend()
         plt.grid(True)
 
