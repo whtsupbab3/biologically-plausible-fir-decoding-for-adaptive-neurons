@@ -18,7 +18,7 @@ neuron_type = nengo.AdaptiveLIF(tau_n=0.5, inc_n=0.01)
 run_time = 10.0
 dt = 0.001
 default_delay_mode = "discrete"
-input_high = 10
+input_high = 0.5
 
 np.random.seed(42)
 
