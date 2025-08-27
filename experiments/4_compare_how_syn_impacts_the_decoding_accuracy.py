@@ -21,11 +21,10 @@ modes = ["range", "discrete", "zero"]
 input_high = 10
 readout_syns = [0.001, 0.01, 0.05, 0.1, 0.15, 0.2]
 n_experiments = 3
-base_train_seed = 121
-base_test_seed = 223
+base_train_seed = 767
+base_test_seed = 9
 
 np.random.seed(42)
-
 
 def plot_loss_vs_syn(rows, modes=None, save_dir=None):
     if isinstance(rows, list):

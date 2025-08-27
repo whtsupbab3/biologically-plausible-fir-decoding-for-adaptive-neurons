@@ -18,13 +18,13 @@ neuron_type = nengo.AdaptiveLIF(tau_n=0.5, inc_n=0.01)
 run_time = 10.0
 dt = 0.001
 default_delay_mode = "discrete"
-input_high = 10
+input_high = 0.5
 taus = [round(0.1 * i, 1) for i in range(1, 10)] + [1.0]
 incs = [0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4]
 modes = ["range", "discrete", "zero"]
 n_experiments = 3
 base_train_seed = 321
-base_test_seed = 421
+base_test_seed = 213
 tau_val = 0.2
 
 np.random.seed(42)
@@ -168,7 +168,7 @@ def run_experiments_adaptation_inc():
 
         plt.xlabel("adaptation increment (inc_n)")
         plt.ylabel("Mean decoding loss (MSE)")
-        plt.title("Decoding loss vs adaptation increment (inc_n)")
+        plt.title(f"Decoding loss vs adaptation increment (high={input_high})")
         plt.grid(True)
         plt.legend()
 

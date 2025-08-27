@@ -14,11 +14,20 @@ from infrastructure.DelayNetwork import DelayNetwork
 # Constants
 n_neurons = 300
 readout_synapse = 0.05
-neuron_type = nengo.AdaptiveLIF(tau_n=0.5, inc_n=0.01)
+neuron_type = nengo.Izhikevich(
+    tau_recovery=0.02,  
+    coupling=0.2,      
+    reset_voltage=-65.0, 
+    reset_recovery=8.0 
+) # nengo.AdaptiveLIF(tau_n=0.5, inc_n=0.01)
 run_time = 10.0
 dt = 0.001
 default_delay_mode = "discrete"
-input_high = 0.5
+input_high = 5
+n_experiments = 10
+base_train_seed = 121
+base_test_seed = 223
+modes = ["range", "discrete", "zero"]
 
 np.random.seed(42)
 
@@ -35,10 +44,7 @@ def train_and_evaluate_decoders(train_input, test_input, delay_mode):
         sim.run(run_time)
 
     t = sim.trange()
-    if delay_mode == "zero":
-        activity = sim.data[p_delay_activity]
-    else: 
-        activity = add_noise_to_activity(sim.data[p_delay_activity])
+    activity = add_noise_to_activity(sim.data[p_delay_activity])
     coeffs = calculate_coeffs(activity, sim.data[p_input])
 
     with nengo.Network(seed=10) as model:
@@ -91,14 +97,6 @@ def train_and_evaluate_decoders(train_input, test_input, delay_mode):
     }
 
 def run_experiments():
-    global run_time
-    run_time = 5.0
-
-    n_experiments = 10
-    base_train_seed = 121
-    base_test_seed = 223
-    modes = ["range", "discrete", "zero"]
-
     losses = {m: [] for m in modes}
 
     print(f"Running {n_experiments} experiments for modes: {modes} (run_time={run_time}s)")
@@ -122,7 +120,7 @@ def run_experiments():
 
         plt.xlabel("Experiment #")
         plt.ylabel("Loss")
-        plt.title("Decoding loss across experiments (high=10)")
+        plt.title(f"Decoding loss across experiments (high={input_high})")
         plt.legend()
         plt.grid(True)
 

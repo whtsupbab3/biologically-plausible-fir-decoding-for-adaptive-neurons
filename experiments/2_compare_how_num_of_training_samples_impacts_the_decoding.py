@@ -21,12 +21,12 @@ readout_synapse = 0.05
 neuron_type = nengo.AdaptiveLIF(tau_n=0.5, inc_n=0.01)
 run_time = 10.0
 dt = 0.001
-default_delay_mode = "zero"
+default_delay_mode = "range"
 input_high = 10
 n_experiments = 1
-slice_counts = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
+slice_counts = [1, 5, 10, 15, 20, 25, 30, 35, 40]
 base_train_seed = 3244
-base_test_seed = 2000
+base_test_seed = 213
 
 result_dir = os.path.abspath(os.path.join(current_dir, "..", "figures"))
 os.makedirs(result_dir, exist_ok=True)
@@ -54,7 +54,7 @@ def train_decoder_from_stacked_runs(activity_list, input_list):
 def evaluate_decoder_on_test(coeffs, test_seed):
 	with nengo.Network(seed=10) as model:
 		input_node = nengo.Node(nengo.processes.WhiteSignal(period=run_time, high=input_high, rms=0.25, seed=test_seed), size_out=1)
-		delay_network = DelayNetwork(num_neurons=n_neurons, decoder_weights=coeffs, readout_synapse=readout_synapse, neuron_type=neuron_type, delay_mode="discrete")
+		delay_network = DelayNetwork(num_neurons=n_neurons, decoder_weights=coeffs, readout_synapse=readout_synapse, neuron_type=neuron_type, delay_mode=default_delay_mode)
 		nengo.Connection(input_node, delay_network.ens, synapse=None)
 
 		p_input = nengo.Probe(input_node, sample_every=dt)
@@ -106,9 +106,9 @@ def run_sweep():
 	plt.fill_between(Ns, np.array(means) - np.array(stds), np.array(means) + np.array(stds), alpha=0.2)
 	plt.xlabel('Number of independent training samples (N)')
 	plt.ylabel('Test MSE loss')
-	plt.title('Effect of number of training samples on decoding accuracy')
+	plt.title(f'Effect of number of training samples on decoding accuracy {input_high}')
 	plt.grid(True)
-	plot_path_pdf = os.path.join(result_dir, f"training_samples_sweep.pdf")
+	plot_path_pdf = os.path.join(result_dir, f"{default_delay_mode}_decoding_multiple_samples_training_hf.pdf")
 	try:
 		plt.savefig(plot_path_pdf, bbox_inches='tight', dpi=300)
 		print(f"Saved plot to {plot_path_pdf}.")
