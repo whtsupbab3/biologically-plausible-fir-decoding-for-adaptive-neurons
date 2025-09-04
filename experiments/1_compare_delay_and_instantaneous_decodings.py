@@ -15,15 +15,15 @@ from infrastructure.DelayNetwork import DelayNetwork
 n_neurons = 300
 readout_synapse = 0.05
 neuron_type = nengo.Izhikevich(
-    tau_recovery=0.02,  
-    coupling=0.2,      
-    reset_voltage=-65.0, 
-    reset_recovery=8.0 
+    tau_recovery=0.02,   # (0.04) Recovery time constant (u variable). Smaller values = slower recovery after spike.
+    coupling=0.2,        # (0.25) Coupling strength between membrane potential (v) and recovery variable (u).
+    reset_voltage=-65.0, # Membrane potential (v) reset value after a spike, usually near resting potential.
+    reset_recovery=8.0   # (12) Increment added to recovery variable (u) after a spike. Larger values = stronger inhibition.
 ) # nengo.AdaptiveLIF(tau_n=0.5, inc_n=0.01)
 run_time = 10.0
 dt = 0.001
 default_delay_mode = "discrete"
-input_high = 5
+input_high = 10
 n_experiments = 10
 base_train_seed = 121
 base_test_seed = 223
