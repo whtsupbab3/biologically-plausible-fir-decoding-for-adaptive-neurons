@@ -61,9 +61,9 @@ def train_and_evaluate_decoders(train_input, test_input, delay_mode):
     decoded = sim.data[p_delay_decoded]
     loss = calculate_loss_function(sim.data[p_input], decoded)
 
-    if delay_mode is "range":
+    if delay_mode == "range":
         plot_title = f"Range Delay Decoding (loss={loss:.6f})"
-    elif delay_mode is "discrete":
+    elif delay_mode == "discrete":
         plot_title = f"Discrete Delay Decoding (loss={loss:.6f})" 
     else:
         plot_title = f"Instantaneous Decoding (loss={loss:.6f})"
