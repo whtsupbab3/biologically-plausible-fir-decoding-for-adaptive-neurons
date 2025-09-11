@@ -14,16 +14,21 @@ from infrastructure.DelayNetwork import DelayNetwork
 # Constants
 n_neurons = 300
 readout_synapse = 0.05
-neuron_type = nengo.Izhikevich(
-    tau_recovery=0.02,   # (0.04) Recovery time constant (u variable). Smaller values = slower recovery after spike.
-    coupling=0.2,        # (0.25) Coupling strength between membrane potential (v) and recovery variable (u).
-    reset_voltage=-65.0, # Membrane potential (v) reset value after a spike, usually near resting potential.
-    reset_recovery=8.0   # (12) Increment added to recovery variable (u) after a spike. Larger values = stronger inhibition.
-) # nengo.AdaptiveLIF(tau_n=0.5, inc_n=0.01)
+neuron_type = nengo.AdaptiveLIF(
+        tau_rc=0.05, tau_ref=0.002,
+        tau_n=0.8,   
+        inc_n=0.2    
+    )
+# nengo.Izhikevich(
+#     tau_recovery=0.02,   # (0.04) Recovery time constant (u variable). Smaller values = slower recovery after spike.
+#     coupling=0.2,        # (0.25) Coupling strength between membrane potential (v) and recovery variable (u).
+#     reset_voltage=-65.0, # Membrane potential (v) reset value after a spike, usually near resting potential.
+#     reset_recovery=8.0   # (12) Increment added to recovery variable (u) after a spike. Larger values = stronger inhibition.
+# ) # 
 run_time = 10.0
 dt = 0.001
 default_delay_mode = "discrete"
-input_high = 10
+input_high = 0.5
 n_experiments = 10
 base_train_seed = 121
 base_test_seed = 223
@@ -77,7 +82,7 @@ def train_and_evaluate_decoders(train_input, test_input, delay_mode):
         plt.ylabel("Signal value")
         plt.title(plot_title)
         plt.legend()
-        filename = f"{delay_mode}_delay_decoding_syn={readout_synapse}_lf.pdf"
+        filename = f"{delay_mode}_delay_decoding_syn={readout_synapse}_high={input_high}.pdf"
         save_path = os.path.join(os.path.join(current_dir, "../figures"), filename)
         try:
             plt.savefig(save_path, bbox_inches='tight', dpi=300)
@@ -124,7 +129,7 @@ def run_experiments():
         plt.legend()
         plt.grid(True)
 
-        filename = f"loss_comparison_syn={readout_synapse}_lf.pdf"
+        filename = f"loss_comparison_syn={readout_synapse}_high={input_high}.pdf"
         save_path = os.path.join(os.path.join(current_dir, "../figures"), filename)
         try:
             plt.savefig(save_path, bbox_inches='tight', dpi=300)
