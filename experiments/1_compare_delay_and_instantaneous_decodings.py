@@ -28,11 +28,12 @@ neuron_type = nengo.AdaptiveLIF(
 run_time = 10.0
 dt = 0.001
 default_delay_mode = "discrete"
-input_high = 0.5
+input_high = 10
 n_experiments = 10
 base_train_seed = 121
 base_test_seed = 223
 modes = ["range", "discrete", "zero"]
+rms=10.0
 
 np.random.seed(42)
 
@@ -82,7 +83,7 @@ def train_and_evaluate_decoders(train_input, test_input, delay_mode):
         plt.ylabel("Signal value")
         plt.title(plot_title)
         plt.legend()
-        filename = f"{delay_mode}_delay_decoding_syn={readout_synapse}_high={input_high}.pdf"
+        filename = f"{delay_mode}_delay_decoding_syn={readout_synapse}_high={input_high}_rms={rms}.pdf"
         save_path = os.path.join(os.path.join(current_dir, "../figures"), filename)
         try:
             plt.savefig(save_path, bbox_inches='tight', dpi=300)
@@ -109,8 +110,8 @@ def run_experiments():
         train_seed = base_train_seed + i
         test_seed = base_test_seed + i
 
-        train_white_signal = nengo.processes.WhiteSignal(period=run_time, high=input_high, rms=0.25, seed=train_seed)
-        test_white_signal = nengo.processes.WhiteSignal(period=run_time, high=input_high, rms=0.25, seed=test_seed)
+        train_white_signal = nengo.processes.WhiteSignal(period=run_time, high=input_high, rms=rms, seed=train_seed)
+        test_white_signal = nengo.processes.WhiteSignal(period=run_time, high=input_high, rms=rms, seed=test_seed)
 
         print(f"Experiment {i+1}/{n_experiments} - train_seed={train_seed}, test_seed={test_seed}")
         for mode in modes:
@@ -125,11 +126,11 @@ def run_experiments():
 
         plt.xlabel("Experiment #")
         plt.ylabel("Loss")
-        plt.title(f"Decoding loss across experiments (high={input_high})")
+        plt.title(f"Decoding loss across experiments (high={input_high}, rms={rms})")
         plt.legend()
         plt.grid(True)
 
-        filename = f"loss_comparison_syn={readout_synapse}_high={input_high}.pdf"
+        filename = f"loss_comparison_syn={readout_synapse}_high={input_high}_rms={rms}.pdf"
         save_path = os.path.join(os.path.join(current_dir, "../figures"), filename)
         try:
             plt.savefig(save_path, bbox_inches='tight', dpi=300)
@@ -139,11 +140,6 @@ def run_experiments():
 
     except Exception as e:
         print(f"Failed to generate loss comparison plot: {e}")
-
-    for mode in modes:
-        vals = np.array(losses[mode])
-        print(f"{mode} losses: {vals}")
-        print(f"{mode} mean loss: {np.mean(vals):.6e}, std: {np.std(vals):.6e}")
 
 if __name__ == "__main__":
     run_experiments()

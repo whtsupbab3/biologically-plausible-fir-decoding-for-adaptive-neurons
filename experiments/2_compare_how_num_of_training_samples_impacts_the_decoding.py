@@ -115,9 +115,6 @@ def run_sweep():
 	except Exception as e:
 		print(f"Failed to save outputs: {e}")
 
-	for N, m, s in zip(Ns, means, stds):
-		print(f"N={N:2d} mean_loss={m:.6e} std={s:.6e}")
-
 	return results
 
 if __name__ == '__main__':
