@@ -14,11 +14,12 @@ from infrastructure.DelayNetwork import DelayNetwork
 # Constants
 n_neurons = 300
 readout_synapse = 0.05
-neuron_type = nengo.AdaptiveLIF(
-        tau_rc=0.05, tau_ref=0.002,
-        tau_n=0.8,   
-        inc_n=0.2    
-    )
+neuron_type = nengo.LIF(tau_rc=0.05, tau_ref=0.002)
+# neuron_type = nengo.AdaptiveLIF(
+#         tau_rc=0.05, tau_ref=0.002,
+#         tau_n=0.8,   
+#         inc_n=0.2    
+#     )
 # nengo.Izhikevich(
 #     tau_recovery=0.02,   # (0.04) Recovery time constant (u variable). Smaller values = slower recovery after spike.
 #     coupling=0.2,        # (0.25) Coupling strength between membrane potential (v) and recovery variable (u).
@@ -33,7 +34,7 @@ n_experiments = 10
 base_train_seed = 121
 base_test_seed = 223
 modes = ["range", "discrete", "zero"]
-rms=10.0
+rms=0.25
 
 np.random.seed(42)
 
