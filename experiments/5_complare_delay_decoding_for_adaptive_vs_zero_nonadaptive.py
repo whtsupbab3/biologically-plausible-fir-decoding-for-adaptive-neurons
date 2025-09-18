@@ -89,8 +89,8 @@ def run_experiments():
 			nengo.AdaptiveLIF(
 				tau_rc=0.05,
 				tau_ref=0.002,
-				tau_n=0.8,   
-				inc_n=0.2, 
+				tau_n=0.2,   
+				inc_n=0.1, 
 			),
 			"range",
 			"AdaptiveLIF (range delay)",
